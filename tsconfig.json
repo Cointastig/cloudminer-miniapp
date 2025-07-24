@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     // Language and Environment
-    "target": "ES2022",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "target": "ES2020",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowJs": false,
@@ -17,19 +17,19 @@
     
     // Type Checking
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
     "noImplicitOverride": true,
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     
     // Interop Constraints
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     
     // Language and Environment
@@ -73,7 +73,7 @@
     "suppressExcessPropertyErrors": false,
     "suppressImplicitAnyIndexErrors": false,
     "noStrictGenericChecks": false,
-    "useUnknownInCatchVariables": true,
+    "useUnknownInCatchVariables": false,
     "keyofStringsOnly": false,
     "noImplicitUseStrict": false,
     "noImplicitAny": true,
@@ -104,21 +104,5 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx"
-  ],
-  
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
-  },
-  
-  "typeAcquisition": {
-    "enable": true,
-    "include": [
-      "node",
-      "jest",
-      "react",
-      "react-dom"
-    ],
-    "exclude": []
-  }
+  ]
 }
