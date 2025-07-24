@@ -9,8 +9,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       react({
-        // Configure SWC options
-        jsxImportSource: '@emotion/react',
+        // Configure SWC options - removed problematic jsxImportSource
         plugins: [
           // Add any SWC plugins here
         ],
@@ -133,15 +132,6 @@ export default defineConfig(({ command, mode }) => {
     // CSS configuration
     css: {
       devSourcemap: mode === 'development',
-      preprocessorOptions: {
-        scss: {
-          additionalData: `@import "@/styles/variables.scss";`,
-        },
-      },
-      modules: {
-        // CSS modules configuration
-        localsConvention: 'camelCase',
-      },
       postcss: {
         plugins: [],
       },
@@ -180,6 +170,7 @@ export default defineConfig(({ command, mode }) => {
         '@twa-dev/sdk',
         'clsx',
         'lucide-react',
+        'jsonwebtoken',
       ],
       exclude: [
         // Exclude large dependencies that should be loaded dynamically
