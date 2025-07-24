@@ -62,8 +62,6 @@ export default function App() {
 
   /* ---------- JWT Token holen und Supabase Client neu erstellen ---------- */
   useEffect(() => {
-    const tid = telegramId ?? 'dev-local';
-    
     if (!telegramId) {
       addDebug('Kein Telegram ID - verwende Standard-Client');
       return;
@@ -194,11 +192,14 @@ export default function App() {
   /* ---------- Ladeanzeige ---------- */
   if (loading) {
     return (
-      <div className="p-6 text-center">
-        <div>Lade...</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-fuchsia-100 p-6">
+        <div className="text-lg mb-4">Lade...</div>
         {debugInfo.length > 0 && (
-          <div className="mt-4 text-xs text-left bg-gray-100 p-2 rounded">
-            {debugInfo.map((info, i) => <div key={i}>{info}</div>)}
+          <div className="w-full max-w-md mt-4 text-xs text-left bg-gray-100 p-3 rounded-lg">
+            <div className="font-semibold mb-2">Debug Info:</div>
+            {debugInfo.map((info, i) => (
+              <div key={i} className="mb-1">{info}</div>
+            ))}
           </div>
         )}
       </div>
@@ -211,63 +212,152 @@ export default function App() {
       <motion.h1 
         initial={{ y: -40, opacity: 0 }} 
         animate={{ y: 0, opacity: 1 }}
-        className="text-4xl font-extrabold"
+        className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
       >
         DTX CloudMiner
       </motion.h1>
 
+      {/* Error-Anzeige */}
       {error && (
-        <Card className="w-full max-w-md border-red-200 bg-red-50">
-          <CardContent>
-            <div className="text-red-600 text-sm">{error}</div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="w-full max-w-md border-red-200 bg-red-50">
+            <CardContent>
+              <div className="text-red-600 text-sm font-medium">{error}</div>
+              <Button 
+                variant="outline" 
+                className="mt-2 text-xs"
+                onClick={() => setError('')}
+              >
+                Schließen
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
-      <Card className="w-full max-w-md">
-        <CardContent className="flex flex-col gap-4">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Level {level}</h2>
-            <Progress value={(earned % 1) * 100} />
-          </div>
-
-          <div className="text-xl font-mono">Saldo {balance.toFixed(2)} DTX</div>
-          <div className="text-sm text-gray-500">
-            Ungesichert {earned.toFixed(3)} DTX
-          </div>
-
-          <Button onClick={mining ? claim : () => setMining(true)}>
-            {mining ? 'Erträge sichern' : 'Mining starten'}
-          </Button>
-
-          <Button onClick={upgradeUSDT} variant="secondary">
-            +1 Level ({PRICES.usdt(level).toFixed(2)} USDT)
-          </Button>
-
-          <p className="text-xs text-center text-gray-400">
-            Auszahlungen sind verfügbar, sobald DTX offiziell gemintet wurde.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Debug Panel */}
-      {debugInfo.length > 0 && (
-        <Card className="w-full max-w-md">
-          <CardContent>
-            <div className="text-xs text-gray-600">
-              <div className="font-semibold mb-2">Debug Info:</div>
-              {debugInfo.map((info, i) => (
-                <div key={i} className="mb-1">{info}</div>
-              ))}
-              {customToken && (
-                <div className="mt-2 p-2 bg-green-100 rounded">
-                  ✅ Custom Token gesetzt: {customToken.substring(0, 20)}...
+      {/* Haupt-Mining-Card */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card className="w-full max-w-md shadow-xl">
+          <CardContent className="flex flex-col gap-4">
+            
+            {/* Level und Progress */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Level {level}</h2>
+                <div className="text-sm text-gray-500">
+                  {mining ? '⚡ Mining aktiv' : '💤 Bereit'}
                 </div>
+              </div>
+              <Progress value={(earned % 1) * 100} className="h-2" />
+              <div className="text-xs text-gray-400 text-center">
+                Mining Rate: {(level * 0.02).toFixed(3)} DTX/s
+              </div>
+            </div>
+
+            {/* Balance-Anzeige */}
+            <div className="text-center space-y-1">
+              <div className="text-2xl font-mono font-bold text-indigo-600">
+                {balance.toFixed(2)} DTX
+              </div>
+              <div className="text-sm text-gray-500">
+                Ungesichert: <span className="font-medium text-orange-600">
+                  {earned.toFixed(3)} DTX
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <Button 
+                onClick={mining ? claim : () => setMining(true)}
+                className="w-full py-3 text-lg font-semibold"
+                disabled={mining && earned < 0.001}
+              >
+                {mining ? (
+                  earned >= 0.001 ? 'Erträge sichern' : `Warte... (${earned.toFixed(3)} DTX)`
+                ) : (
+                  'Mining starten'
+                )}
+              </Button>
+
+              <Button 
+                onClick={upgradeUSDT} 
+                variant="secondary"
+                className="w-full"
+              >
+                🚀 Level upgrade ({PRICES.usdt(level).toFixed(2)} USDT)
+              </Button>
+            </div>
+
+            {/* Info-Text */}
+            <div className="text-xs text-center text-gray-400 bg-gray-50 p-3 rounded-lg">
+              <p>
+                💡 Auszahlungen sind verfügbar, sobald DTX offiziell gemintet wurde.
+              </p>
+              {telegramId && (
+                <p className="mt-1">
+                  👤 Telegram ID: {telegramId}
+                </p>
               )}
             </div>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* Debug Panel - nur in Development */}
+      {(import.meta.env.DEV && debugInfo.length > 0) && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="w-full max-w-md bg-gray-50 border-gray-200">
+            <CardContent>
+              <div className="text-xs text-gray-600">
+                <div className="font-semibold mb-2 flex items-center gap-2">
+                  🔧 Debug Info
+                  <Button 
+                    variant="outline" 
+                    className="text-xs px-2 py-1 h-auto"
+                    onClick={() => setDebugInfo([])}
+                  >
+                    Clear
+                  </Button>
+                </div>
+                
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {debugInfo.map((info, i) => (
+                    <div key={i} className="text-xs p-1 bg-white rounded border">
+                      {info}
+                    </div>
+                  ))}
+                </div>
+                
+                {customToken && (
+                  <div className="mt-3 p-2 bg-green-100 rounded text-xs">
+                    <div className="font-medium text-green-800">✅ JWT Token aktiv</div>
+                    <div className="text-green-600 font-mono">
+                      {customToken.substring(0, 30)}...
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
+
+      {/* Footer */}
+      <div className="text-xs text-gray-400 text-center mt-4">
+        <p>DTX CloudMiner v1.0 | Powered by Supabase & TON</p>
+      </div>
     </div>
   );
 }
