@@ -43,10 +43,6 @@
     "importHelpers": false,
     "downlevelIteration": false,
     
-    // JavaScript Support
-    "allowJs": false,
-    "checkJs": false,
-    
     // Editor Support  
     "disableSizeLimit": false,
     "plugins": [],
