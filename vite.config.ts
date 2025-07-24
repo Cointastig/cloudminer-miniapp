@@ -1,6 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
-import { fileURLToPath, URL } from 'node:url';
+import path from 'path';
 
 export default defineConfig(({ command, mode }) => {
   // Load env file based on `mode` in the current working directory.
@@ -17,14 +17,14 @@ export default defineConfig(({ command, mode }) => {
     // Path resolution
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '@/components': fileURLToPath(new URL('./src/components', import.meta.url)),
-        '@/utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
-        '@/hooks': fileURLToPath(new URL('./src/hooks', import.meta.url)),
-        '@/types': fileURLToPath(new URL('./src/types', import.meta.url)),
-        '@/api': fileURLToPath(new URL('./src/api', import.meta.url)),
-        '@/styles': fileURLToPath(new URL('./src/styles', import.meta.url)),
-        '@/assets': fileURLToPath(new URL('./src/assets', import.meta.url)),
+        '@': path.resolve(__dirname, './src'),
+        '@/components': path.resolve(__dirname, './src/components'),
+        '@/utils': path.resolve(__dirname, './src/utils'),
+        '@/hooks': path.resolve(__dirname, './src/hooks'),
+        '@/types': path.resolve(__dirname, './src/types'),
+        '@/api': path.resolve(__dirname, './src/api'),
+        '@/styles': path.resolve(__dirname, './src/styles'),
+        '@/assets': path.resolve(__dirname, './src/assets'),
       },
     },
     
@@ -67,9 +67,6 @@ export default defineConfig(({ command, mode }) => {
       
       // Rollup options
       rollupOptions: {
-        input: {
-          main: fileURLToPath(new URL('./index.html', import.meta.url)),
-        },
         output: {
           // Manual chunk splitting for better caching
           manualChunks: {
@@ -138,6 +135,8 @@ export default defineConfig(({ command, mode }) => {
       __PROD__: mode === 'production',
       // Ensure process.env is defined for libraries that expect it
       'process.env': {},
+      // Fix for Node.js globals
+      global: 'globalThis',
     },
     
     // Dependency optimization
