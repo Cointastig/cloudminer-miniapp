@@ -1,26 +1,128 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
+    // Language and Environment
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
+    "allowJs": false,
+    "checkJs": false,
+    
+    // Bundler mode
+    "allowImportingTsExtensions": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    "baseUrl": ".",                       
+    
+    // Type Checking
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    
+    // Interop Constraints
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Language and Environment
+    "useDefineForClassFields": true,
+    
+    // Emit
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "removeComments": false,
+    "importHelpers": false,
+    "downlevelIteration": false,
+    
+    // JavaScript Support
+    "allowJs": false,
+    "checkJs": false,
+    
+    // Editor Support  
+    "disableSizeLimit": false,
+    "plugins": [],
+    
+    // Output Formatting
+    "noErrorTruncation": true,
+    "preserveWatchOutput": true,
+    "pretty": true,
+    
+    // Completeness
+    "skipLibCheck": true,
+    
+    // Path Mapping
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]                 
-    }
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/api/*": ["./src/api/*"],
+      "@/styles/*": ["./src/styles/*"],
+      "@/assets/*": ["./src/assets/*"]
+    },
+    
+    // Advanced Options
+    "skipDefaultLibCheck": true,
+    "suppressExcessPropertyErrors": false,
+    "suppressImplicitAnyIndexErrors": false,
+    "noStrictGenericChecks": false,
+    "useUnknownInCatchVariables": true,
+    "keyofStringsOnly": false,
+    "noImplicitUseStrict": false,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "alwaysStrict": true
   },
-  "include": ["src"],
-  "exclude": ["api", "node_modules", "dist"]
+  
+  "include": [
+    "src/**/*",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "vite.config.ts"
+  ],
+  
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "public",
+    "api/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ],
+  
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  },
+  
+  "typeAcquisition": {
+    "enable": true,
+    "include": [
+      "node",
+      "jest",
+      "react",
+      "react-dom"
+    ],
+    "exclude": []
+  }
 }
