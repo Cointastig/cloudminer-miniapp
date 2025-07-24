@@ -70,8 +70,8 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? '/api';
 
 /* ---------- Preiskalkulation ---------- */
 const PRICES = {
-  stars: (lvl: number) => 50 + lvl * 25,
-  usdt:  (lvl: number) => 0.5 + lvl * 0.25
+  stars: (lvl: number) => 50 + (lvl - 1) * 25,
+  usdt:  (lvl: number) => 0.5 + (lvl - 1) * 0.25
 };
 
 /* ---------- Level Konfiguration ---------- */
@@ -157,9 +157,11 @@ export default function App() {
       if (!telegramId) {
         if (import.meta.env.DEV) {
           addDebug('Development mode: Using standard Supabase client');
+          setLoading(false);
           return;
         } else {
           setError('Telegram ID not available. Please open this app from Telegram.');
+          setLoading(false);
           return;
         }
       }
@@ -186,6 +188,7 @@ export default function App() {
       } catch (err: any) {
         addDebug(`Authentication error: ${err.message}`);
         setError(`Authentication failed: ${err.message}`);
+        setLoading(false);
       }
     };
 
@@ -195,7 +198,7 @@ export default function App() {
   /* ---------- Profil laden / anlegen ---------- */
   useEffect(() => {
     const loadUserProfile = async () => {
-      if (!supabaseClient) return;
+      if (!supabaseClient || loading) return;
 
       const userId = telegramId?.toString() ?? 'dev-local';
       addDebug(`Loading profile for user: ${userId}`);
@@ -239,8 +242,10 @@ export default function App() {
       }
     };
 
-    loadUserProfile();
-  }, [supabaseClient, telegramId]);
+    if (supabaseClient && (telegramId || import.meta.env.DEV)) {
+      loadUserProfile();
+    }
+  }, [supabaseClient, telegramId, loading]);
 
   /* ---------- Mining-Simulation und Timer ---------- */
   useEffect(() => {
@@ -546,9 +551,8 @@ export default function App() {
                     animate={{ scale: 1 }}
                     className="text-4xl font-mono font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent"
                   >
-                    {balance.toFixed(2)}
+                    {balance.toFixed(2)} DTX
                   </motion.div>
-                  <div className="text-lg text-gray-300">DTX</div>
                 </div>
 
                 {/* Pending Earnings */}
@@ -640,10 +644,10 @@ export default function App() {
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Upgrade to Level {level + 1}
+                <span>Upgrade to Level {level + 1}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span>{PRICES.usdt(level).toFixed(2)} USDT</span>
+                <span className="font-mono">{PRICES.usdt(level + 1).toFixed(2)} USDT</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
             </div>
@@ -686,7 +690,7 @@ export default function App() {
           </div>
           
           <div className="text-xs text-gray-600">
-            DTX CloudMiner v2.0 | Powered by TON & Supabase
+            @DTX_MINER_BOT
           </div>
         </motion.div>
 
