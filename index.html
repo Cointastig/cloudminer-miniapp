@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0f0f23" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <title>DTX CloudMiner</title>
@@ -13,6 +13,9 @@
       padding: 0;
       background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
       font-family: system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     
     /* Loading animation */
@@ -42,6 +45,16 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    
+    /* Hide root until React is loaded */
+    #root {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    #root.loaded {
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="min-h-screen">
@@ -51,16 +64,34 @@
   <div id="root"></div>
   <script type="module" src="/src/index.tsx"></script>
   <script>
+    // Initialize Telegram WebApp immediately
+    if (window.Telegram && window.Telegram.WebApp) {
+      try {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+      } catch (e) {
+        console.warn('Telegram WebApp initialization error:', e);
+      }
+    }
+    
     // Hide loading screen when React app loads
-    window.addEventListener('load', () => {
+    window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const loading = document.getElementById('loading');
-        if (loading) {
+        const root = document.getElementById('root');
+        if (loading && root) {
           loading.style.opacity = '0';
           loading.style.transition = 'opacity 0.3s ease';
+          root.classList.add('loaded');
           setTimeout(() => loading.remove(), 300);
         }
-      }, 1000);
+      }, 100);
+    });
+    
+    // Error handler
+    window.addEventListener('error', (e) => {
+      console.error('Global error:', e.error);
+      // Don't hide loading screen on error so user sees something
     });
   </script>
 </body>
