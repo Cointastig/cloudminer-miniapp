@@ -23,19 +23,47 @@ import { Progress } from '@/components/ui/progress';
 import { MiningVisualizer } from '@/components/ui/mining-visualizer';
 import { StatsCard } from '@/components/ui/stats-card';
 
+/* ---------- Type Definitions ---------- */
+interface TelegramWebApp {
+  WebApp?: {
+    initDataUnsafe?: {
+      user?: {
+        id: number;
+        first_name?: string;
+        username?: string;
+      };
+    };
+    ready: () => void;
+    setBackgroundColor: (color: string) => void;
+    setHeaderColor: (color: string) => void;
+    HapticFeedback?: {
+      impactOccurred: (style: 'light' | 'medium' | 'heavy') => void;
+    };
+  };
+}
+
+declare global {
+  interface Window {
+    Telegram?: TelegramWebApp;
+  }
+}
+
 /* ---------- Supabase Client mit Custom Headers ---------- */
 const createSupabaseClientWithAuth = (customToken?: string) => {
-  return createClient(
-    import.meta.env.VITE_SUPABASE_URL!,
-    import.meta.env.VITE_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: customToken ? {
-          'Authorization': `Bearer ${customToken}`
-        } : {}
-      }
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase configuration. Please check your environment variables.');
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: customToken ? {
+        'Authorization': `Bearer ${customToken}`
+      } : {}
     }
-  );
+  });
 };
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? '/api';
@@ -56,6 +84,21 @@ const LEVEL_CONFIG = {
   10: { name: 'Diamond Legend', multiplier: 5, color: 'from-cyan-400 to-blue-600' }
 };
 
+/* ---------- Helper Functions ---------- */
+const getTelegramId = (): number | null => {
+  try {
+    const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    return typeof telegramId === 'number' ? telegramId : null;
+  } catch (error) {
+    console.warn('Failed to get Telegram ID:', error);
+    return null;
+  }
+};
+
+const isWebAppEnvironment = (): boolean => {
+  return !!(window.Telegram?.WebApp);
+};
+
 export default function App() {
   /* ---------- React State ---------- */
   const [loading, setLoading] = useState(true);
@@ -66,12 +109,12 @@ export default function App() {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
   const [customToken, setCustomToken] = useState<string>('');
-  const [supabaseClient, setSupabaseClient] = useState(createSupabaseClientWithAuth());
+  const [supabaseClient, setSupabaseClient] = useState(() => createSupabaseClientWithAuth());
   const [miningTime, setMiningTime] = useState(0);
   const [showStats, setShowStats] = useState(false);
 
   /* ---------- Telegram / TON ---------- */
-  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const telegramId = getTelegramId();
   const address = useTonAddress();
   const [tonUI] = useTonConnectUI();
 
@@ -87,86 +130,116 @@ export default function App() {
 
   /* ---------- Telegram SDK Ready ---------- */
   useEffect(() => {
-    WebApp.ready();
-    WebApp.setBackgroundColor('#0f0f23');
-    WebApp.setHeaderColor('#0f0f23');
-    addDebug(`Telegram ID: ${telegramId || 'Nicht verfügbar (lokal)'}`);
-  }, []);
+    if (isWebAppEnvironment()) {
+      try {
+        WebApp.ready();
+        WebApp.setBackgroundColor('#0f0f23');
+        WebApp.setHeaderColor('#0f0f23');
+        addDebug(`Telegram WebApp initialized. User ID: ${telegramId || 'Not available'}`);
+      } catch (error) {
+        addDebug(`Telegram WebApp initialization failed: ${error}`);
+      }
+    } else {
+      addDebug('Running in browser mode (not Telegram WebApp)');
+    }
+    
+    // Validate environment
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      setError('Missing Supabase configuration. Please check environment variables.');
+      return;
+    }
+  }, [telegramId]);
 
   /* ---------- JWT Token holen und Supabase Client neu erstellen ---------- */
   useEffect(() => {
-    if (!telegramId) {
-      addDebug('Kein Telegram ID - verwende Standard-Client');
-      return;
-    }
-
-    addDebug('Hole JWT Token...');
-    fetch(`/api/jwt?tid=${telegramId}`)
-      .then(async r => {
-        if (!r.ok) {
-          const errorText = await r.text();
-          throw new Error(`HTTP ${r.status}: ${errorText}`);
+    const initializeAuth = async () => {
+      // In development mode or when no Telegram ID is available, use standard client
+      if (!telegramId) {
+        if (import.meta.env.DEV) {
+          addDebug('Development mode: Using standard Supabase client');
+          return;
+        } else {
+          setError('Telegram ID not available. Please open this app from Telegram.');
+          return;
         }
-        return r.text();
-      })
-      .then(token => {
-        addDebug('JWT Token erhalten, erstelle neuen Supabase Client...');
+      }
+
+      try {
+        addDebug('Fetching JWT token...');
+        const response = await fetch(`/api/jwt?tid=${telegramId}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const token = await response.text();
+        addDebug('JWT token received, creating authenticated Supabase client...');
+        
         setCustomToken(token);
         
-        // Neuen Supabase Client mit Custom Token erstellen
+        // Create new Supabase client with custom token
         const newClient = createSupabaseClientWithAuth(token);
         setSupabaseClient(newClient);
         
-        addDebug('Supabase Client mit Custom Auth erstellt');
-      })
-      .catch(err => {
-        addDebug(`JWT Fehler: ${err.message}`);
-        setError(`Auth-Fehler: ${err.message}`);
-      });
+        addDebug('Supabase client with custom authentication created');
+      } catch (err: any) {
+        addDebug(`Authentication error: ${err.message}`);
+        setError(`Authentication failed: ${err.message}`);
+      }
+    };
+
+    initializeAuth();
   }, [telegramId]);
 
   /* ---------- Profil laden / anlegen ---------- */
   useEffect(() => {
-    if (!supabaseClient) return;
+    const loadUserProfile = async () => {
+      if (!supabaseClient) return;
 
-    const tid = telegramId ?? 'dev-local';
-    addDebug(`Lade Profil für: ${tid}`);
+      const userId = telegramId?.toString() ?? 'dev-local';
+      addDebug(`Loading profile for user: ${userId}`);
 
-    (async () => {
       try {
-        // Erst versuchen zu laden
-        addDebug('Sende SELECT Query...');
+        // First, try to load existing user
+        addDebug('Sending SELECT query...');
         const { data, error: selectError } = await supabaseClient
           .from('users')
           .select('dtx_balance, miner_level')
-          .eq('telegram_id', tid)
+          .eq('telegram_id', userId)
           .single();
 
         if (selectError?.code === 'PGRST116') {
-          // User existiert nicht - erstellen
-          addDebug('User nicht gefunden, erstelle neuen...');
+          // User doesn't exist - create new user
+          addDebug('User not found, creating new user...');
           const { error: insertError } = await supabaseClient
             .from('users')
-            .insert({ telegram_id: tid });
+            .insert({ telegram_id: parseInt(userId, 10) || 0 });
 
           if (insertError) {
-            throw new Error(`Insert-Fehler: ${insertError.message} (Code: ${insertError.code})`);
+            throw new Error(`Insert error: ${insertError.message} (Code: ${insertError.code})`);
           }
-          addDebug('Neuer User erstellt');
+          addDebug('New user created successfully');
+          
+          // Set default values for new user
+          setBalance(0);
+          setLevel(1);
         } else if (selectError) {
-          throw new Error(`Select-Fehler: ${selectError.message} (Code: ${selectError.code})`);
+          throw new Error(`Select error: ${selectError.message} (Code: ${selectError.code})`);
         } else if (data) {
-          addDebug(`Profil geladen: Balance=${data.dtx_balance}, Level=${data.miner_level}`);
+          addDebug(`Profile loaded: Balance=${data.dtx_balance}, Level=${data.miner_level}`);
           setBalance(data.dtx_balance ?? 0);
           setLevel(data.miner_level ?? 1);
         }
       } catch (err: any) {
-        addDebug(`Profil-Fehler: ${err.message}`);
-        setError(`Datenbank-Fehler: ${err.message}`);
+        addDebug(`Profile loading error: ${err.message}`);
+        setError(`Database error: ${err.message}`);
       } finally {
         setLoading(false);
       }
-    })();
+    };
+
+    loadUserProfile();
   }, [supabaseClient, telegramId]);
 
   /* ---------- Mining-Simulation und Timer ---------- */
@@ -183,33 +256,37 @@ export default function App() {
 
   /* ---------- Server-Methoden ---------- */
   const claim = async () => {
-    const tid = telegramId ?? 'dev-local';
-    const newBal = balance + earned;
+    const userId = telegramId?.toString() ?? 'dev-local';
+    const newBalance = balance + earned;
     
-    addDebug(`Sichere ${earned.toFixed(3)} DTX (neue Balance: ${newBal.toFixed(2)})`);
+    addDebug(`Claiming ${earned.toFixed(3)} DTX (new balance: ${newBalance.toFixed(2)})`);
     
     try {
       const { error } = await supabaseClient
         .from('users')
-        .update({ dtx_balance: newBal })
-        .eq('telegram_id', tid);
+        .update({ dtx_balance: newBalance })
+        .eq('telegram_id', userId);
 
       if (error) {
         throw new Error(`${error.message} (Code: ${error.code})`);
       }
 
-      setBalance(newBal);
+      setBalance(newBalance);
       setEarned(0);
       setMiningTime(0);
-      addDebug('Erfolgreich gesichert!');
+      addDebug('Successfully claimed rewards!');
       
-      // Haptic feedback
-      if (WebApp.HapticFeedback) {
-        WebApp.HapticFeedback.impactOccurred('heavy');
+      // Haptic feedback if available
+      try {
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+          window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+        }
+      } catch (hapticError) {
+        // Ignore haptic feedback errors
       }
     } catch (err: any) {
-      addDebug(`Claim-Fehler: ${err.message}`);
-      setError(`Speicher-Fehler: ${err.message}`);
+      addDebug(`Claim error: ${err.message}`);
+      setError(`Failed to save rewards: ${err.message}`);
     }
   };
 
@@ -219,25 +296,61 @@ export default function App() {
       return; 
     }
     
+    if (!telegramId) {
+      setError('Telegram ID not available for upgrade');
+      return;
+    }
+    
     try {
-      const res = await fetch(`${BACKEND_URL}/upgrade-usdt`, {
-        method : 'POST',
+      addDebug('Initiating USDT upgrade...');
+      const response = await fetch(`${BACKEND_URL}/upgrade-usdt`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({ telegramId, level: level + 1, address })
+        body: JSON.stringify({ 
+          telegramId: telegramId.toString(), 
+          level: level + 1, 
+          address 
+        })
       });
-      const { payload } = await res.json();
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+      
+      const { payload } = await response.json();
       await tonUI.sendTransaction(payload);
+      
+      addDebug('Upgrade transaction sent successfully');
     } catch (err: any) {
-      addDebug(`Upgrade-Fehler: ${err.message}`);
-      setError(`Upgrade-Fehler: ${err.message}`);
+      addDebug(`Upgrade error: ${err.message}`);
+      setError(`Upgrade failed: ${err.message}`);
     }
   };
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  /* ---------- Environment Checks ---------- */
+  useEffect(() => {
+    // Check if we're in a supported environment
+    if (!import.meta.env.DEV && !isWebAppEnvironment()) {
+      setError('This application must be opened from Telegram');
+      return;
+    }
+
+    // Check for required environment variables
+    const requiredEnvVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+    const missingVars = requiredEnvVars.filter(varName => !import.meta.env[varName]);
+    
+    if (missingVars.length > 0) {
+      setError(`Missing environment variables: ${missingVars.join(', ')}`);
+      return;
+    }
+  }, []);
 
   /* ---------- Ladeanzeige ---------- */
   if (loading) {
