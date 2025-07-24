@@ -9,10 +9,8 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       react({
-        // Configure SWC options - removed problematic jsxImportSource
-        plugins: [
-          // Add any SWC plugins here
-        ],
+        // Configure SWC options
+        plugins: [],
       }),
     ],
     
@@ -45,11 +43,6 @@ export default defineConfig(({ command, mode }) => {
           secure: false,
         },
       },
-      headers: {
-        // Security headers for development
-        'Cross-Origin-Embedder-Policy': 'credentialless',
-        'Cross-Origin-Opener-Policy': 'same-origin',
-      },
     },
     
     // Preview server (for production preview)
@@ -63,11 +56,11 @@ export default defineConfig(({ command, mode }) => {
     
     // Build configuration
     build: {
-      target: 'esnext',
+      target: 'es2015', // Better compatibility
       outDir: 'dist',
       assetsDir: 'assets',
       minify: 'esbuild',
-      sourcemap: mode === 'development',
+      sourcemap: false, // Disable sourcemaps in production
       
       // Chunk size warnings
       chunkSizeWarningLimit: 1600,
@@ -81,34 +74,27 @@ export default defineConfig(({ command, mode }) => {
           // Manual chunk splitting for better caching
           manualChunks: {
             // Vendor chunks
-            react: ['react', 'react-dom'],
-            framer: ['framer-motion'],
-            supabase: ['@supabase/supabase-js'],
-            ton: ['@tonconnect/ui-react', '@tonconnect/sdk'],
-            telegram: ['@twa-dev/sdk'],
-            
-            // UI components
-            ui: ['clsx', 'lucide-react'],
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-framer': ['framer-motion'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-ton': ['@tonconnect/ui-react'],
+            'vendor-telegram': ['@twa-dev/sdk'],
+            'vendor-ui': ['clsx', 'lucide-react'],
           },
           
           // Naming pattern for chunks
-          chunkFileNames: (chunkInfo) => {
-            const facadeModuleId = chunkInfo.facadeModuleId
-              ? chunkInfo.facadeModuleId.split('/').pop()?.replace(/\.[^.]*$/, '') || 'chunk'
-              : 'chunk';
-            return `js/${facadeModuleId}-[hash].js`;
-          },
+          chunkFileNames: 'js/[name]-[hash].js',
           
           // Asset naming
           assetFileNames: (assetInfo) => {
             const extType = assetInfo.name?.split('.').pop() || '';
             if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
-              return `images/[name]-[hash][extname]`;
+              return 'images/[name]-[hash][extname]';
             }
             if (/css/i.test(extType)) {
-              return `css/[name]-[hash][extname]`;
+              return 'css/[name]-[hash][extname]';
             }
-            return `assets/[name]-[hash][extname]`;
+            return 'assets/[name]-[hash][extname]';
           },
           
           // Entry file naming
@@ -132,19 +118,13 @@ export default defineConfig(({ command, mode }) => {
     // CSS configuration
     css: {
       devSourcemap: mode === 'development',
-      postcss: {
-        plugins: [],
-      },
     },
     
-    // Asset processing
-    assetsInclude: ['**/*.glb', '**/*.gltf', '**/*.hdr'],
-    
     // Environment variables
-    envPrefix: ['VITE_', 'REACT_APP_'],
+    envPrefix: ['VITE_'],
     
-    // Base path
-    base: mode === 'production' ? './' : '/',
+    // Base path - IMPORTANT: Use '/' for Vercel
+    base: '/',
     
     // Public directory
     publicDir: 'public',
@@ -152,10 +132,12 @@ export default defineConfig(({ command, mode }) => {
     // Define global constants
     define: {
       // Global constants available in the app
-      __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '0.1.0'),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
       __DEV__: mode === 'development',
       __PROD__: mode === 'production',
+      // Ensure process.env is defined for libraries that expect it
+      'process.env': {},
     },
     
     // Dependency optimization
@@ -170,17 +152,17 @@ export default defineConfig(({ command, mode }) => {
         '@twa-dev/sdk',
         'clsx',
         'lucide-react',
-        'jsonwebtoken',
       ],
-      exclude: [
-        // Exclude large dependencies that should be loaded dynamically
-      ],
+      exclude: [],
+      esbuildOptions: {
+        target: 'es2015',
+      },
     },
     
     // Worker configuration
     worker: {
       format: 'es',
-      plugins: [],
+      plugins: () => [],
     },
     
     // JSON configuration
@@ -192,16 +174,5 @@ export default defineConfig(({ command, mode }) => {
     // Logging
     logLevel: mode === 'development' ? 'info' : 'warn',
     clearScreen: false,
-    
-    // Experimental features
-    experimental: {
-      renderBuiltUrl(filename, { hostType }) {
-        if (hostType === 'js') {
-          return { js: `/${filename}` };
-        } else {
-          return { relative: true };
-        }
-      },
-    },
   };
 });
