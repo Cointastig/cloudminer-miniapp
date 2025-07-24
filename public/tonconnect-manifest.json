@@ -1,8 +1,7 @@
-
 {
-  "url": "https://yourdomain.vercel.app",
+  "url": "https://cloudminer-miniapp.vercel.app/",
   "name": "DTX CloudMiner",
-  "iconUrl": "https://yourdomain.vercel.app/icon.png",
-  "termsOfUseUrl": "https://yourdomain.vercel.app/terms",
-  "privacyPolicyUrl": "https://yourdomain.vercel.app/privacy"
+  "iconUrl": "https://cloudminer-miniapp.vercel.app/icon.png",
+  "termsOfUseUrl": "https://cloudminer-miniapp.vercel.app/terms",
+  "privacyPolicyUrl": "https://cloudminer-miniapp.vercel.app/privacy"
 }
