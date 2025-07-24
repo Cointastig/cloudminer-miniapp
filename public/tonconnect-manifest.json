@@ -1,7 +1,10 @@
 {
-  "url": "https://cloudminer-miniapp.vercel.app/",
+  "url": "https://dtx-cloudminer.vercel.app/",
   "name": "DTX CloudMiner",
-  "iconUrl": "https://cloudminer-miniapp.vercel.app/icon.png",
-  "termsOfUseUrl": "https://cloudminer-miniapp.vercel.app/terms",
-  "privacyPolicyUrl": "https://cloudminer-miniapp.vercel.app/privacy"
+  "iconUrl": "https://dtx-cloudminer.vercel.app/icon-192x192.png",
+  "termsOfUseUrl": "https://dtx-cloudminer.vercel.app/terms",
+  "privacyPolicyUrl": "https://dtx-cloudminer.vercel.app/privacy",
+  "bridgeUrl": "https://bridge.tonapi.io/bridge",
+  "universalUrl": "https://dtx-cloudminer.vercel.app/tc",
+  "platforms": ["android", "ios", "macos", "windows", "linux"]
 }
