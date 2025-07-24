@@ -78,7 +78,7 @@ export default function handler(
     }
 
     // Validate TON address format (basic check)
-    if (!address.match(/^[A-Za-z0-9+/=_-]+$/)) {
+    if (!address.match(/^[A-Za-z0-9+/=_-]+$/) || address.length < 48) {
       res.status(400).json({
         success: false,
         error: 'invalid_address',
@@ -163,13 +163,4 @@ function generateUpgradePayload(telegramId: string, targetLevel: number): string
   };
   
   return Buffer.from(JSON.stringify(data)).toString('base64');
-}
-
-/**
- * Validate TON address (more comprehensive check)
- * TODO: Implement proper TON address validation
- */
-function isValidTONAddress(address: string): boolean {
-  // Basic validation - replace with proper TON address validation
-  return address.length > 10 && /^[A-Za-z0-9+/=_-]+$/.test(address);
 }
