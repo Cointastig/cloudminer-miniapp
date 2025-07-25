@@ -35,14 +35,16 @@ export default defineConfig(({ command, mode }) => {
       strictPort: false,
       open: false, // Don't auto-open browser
       cors: true,
-      proxy: {
-        // Proxy API requests to avoid CORS issues in development
-        '/api': {
-          target: env.VITE_BACKEND_URL || 'http://localhost:3001',
-          changeOrigin: true,
-          secure: false,
+      // Only use proxy in development
+      ...(mode === 'development' && {
+        proxy: {
+          '/api': {
+            target: env.VITE_BACKEND_URL || 'http://localhost:3001',
+            changeOrigin: true,
+            secure: false,
+          },
         },
-      },
+      }),
     },
     
     // Preview server (for production preview)
@@ -109,12 +111,16 @@ export default defineConfig(({ command, mode }) => {
       esbuild: {
         legalComments: 'none',
         treeShaking: true,
+        drop: mode === 'production' ? ['console', 'debugger'] : [],
       },
     },
     
     // CSS configuration
     css: {
       devSourcemap: mode === 'development',
+      postcss: {
+        plugins: [],
+      },
     },
     
     // Environment variables
