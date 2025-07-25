@@ -17,11 +17,11 @@ import {
   Sparkles
 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { MiningVisualizer } from '@/components/ui/mining-visualizer';
-import { StatsCard } from '@/components/ui/stats-card';
+import { Button } from './components/ui/button';
+import { Card, CardContent } from './components/ui/card';
+import { Progress } from './components/ui/progress';
+import { MiningVisualizer } from './components/ui/mining-visualizer';
+import { StatsCard } from './components/ui/stats-card';
 
 /* ---------- Type Definitions ---------- */
 interface TelegramWebApp {
@@ -82,7 +82,7 @@ const LEVEL_CONFIG = {
   4: { name: 'Gold Prospector', multiplier: 2.5, color: 'from-yellow-400 to-yellow-600' },
   5: { name: 'Platinum Master', multiplier: 3, color: 'from-blue-400 to-purple-600' },
   10: { name: 'Diamond Legend', multiplier: 5, color: 'from-cyan-400 to-blue-600' }
-};
+} as const;
 
 /* ---------- Helper Functions ---------- */
 const getTelegramId = (): number | null => {
@@ -105,7 +105,7 @@ export default function App() {
   const [mining, setMining] = useState(false);
   const [earned, setEarned] = useState(0);
   const [balance, setBalance] = useState(0);
-  const [level, setLevel] = useState(1);
+  const [level, setLevel] = useState<keyof typeof LEVEL_CONFIG>(1);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
   const [customToken, setCustomToken] = useState<string>('');
@@ -119,7 +119,7 @@ export default function App() {
   const [tonUI] = useTonConnectUI();
 
   // Level-spezifische Konfiguration
-  const currentLevelConfig = LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG] || 
+  const currentLevelConfig = LEVEL_CONFIG[level] || 
     { name: 'Elite Miner', multiplier: level * 0.5, color: 'from-purple-400 to-pink-600' };
 
   // Debug helper
@@ -232,7 +232,7 @@ export default function App() {
         } else if (data) {
           addDebug(`Profile loaded: Balance=${data.dtx_balance}, Level=${data.miner_level}`);
           setBalance(data.dtx_balance ?? 0);
-          setLevel(data.miner_level ?? 1);
+          setLevel((data.miner_level ?? 1) as keyof typeof LEVEL_CONFIG);
         }
       } catch (err: any) {
         addDebug(`Profile loading error: ${err.message}`);
