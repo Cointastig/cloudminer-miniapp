@@ -7,6 +7,10 @@
       "maxDuration": 30
     }
   },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install --production=false",
+  "framework": "vite",
   "headers": [
     {
       "source": "/(.*)",
@@ -60,8 +64,7 @@
       "permanent": false
     }
   ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install",
-  "framework": "vite"
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
