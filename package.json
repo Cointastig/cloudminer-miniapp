@@ -14,7 +14,7 @@
     "@twa-dev/sdk": "^8.0.2",
     "clsx": "^2.1.0",
     "framer-motion": "11.1.4",
-    "lucide-react": "^0.303.0",
+    "lucide-react": "^0.263.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },
