@@ -115,12 +115,10 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     
-    // CSS configuration
+    // CSS configuration - REMOVED empty postcss plugins
     css: {
       devSourcemap: mode === 'development',
-      postcss: {
-        plugins: [],
-      },
+      // Let PostCSS use the config from postcss.config.js
     },
     
     // Environment variables
