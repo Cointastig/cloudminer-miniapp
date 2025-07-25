@@ -1,98 +1,124 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0f0f23" />
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <title>DTX CloudMiner</title>
-  <style>
-    /* Prevent flash of unstyled content */
-    body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
-      font-family: system-ui, -apple-system, sans-serif;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './styles.css';
+import { TonConnectUIProvider } from '@tonconnect/ui-react';
+
+// Configure TonConnect theme
+const tonConnectTheme = {
+  theme: 'dark' as const,
+  colors: {
+    background: '#0f0f23',
+    text: '#ffffff',
+    accent: '#06b6d4',
+  }
+};
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+          <div className="text-center space-y-4">
+            <div className="text-6xl">⚠️</div>
+            <h1 className="text-2xl font-bold text-white">Something went wrong</h1>
+            <p className="text-gray-400 max-w-md">
+              The app encountered an unexpected error. Please refresh the page or contact support.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-semibold transition-colors"
+            >
+              Reload App
+            </button>
+            {this.state.error && (
+              <details className="mt-4 text-left">
+                <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-400">
+                  Error Details
+                </summary>
+                <pre className="mt-2 p-4 bg-black/30 rounded-lg text-xs text-red-400 overflow-auto max-w-md">
+                  {this.state.error.toString()}
+                </pre>
+              </details>
+            )}
+          </div>
+        </div>
+      );
     }
-    
-    /* Loading animation */
-    .loading-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-    
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(99, 102, 241, 0.3);
-      border-top: 3px solid #6366f1;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    /* Hide root until React is loaded */
-    #root {
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    
-    #root.loaded {
-      opacity: 1;
-    }
-  </style>
-</head>
-<body class="min-h-screen">
-  <div id="loading" class="loading-screen">
-    <div class="loading-spinner"></div>
-  </div>
-  <div id="root"></div>
-  <script type="module" src="/src/index.tsx"></script>
-  <script>
-    // Initialize Telegram WebApp immediately
-    if (window.Telegram && window.Telegram.WebApp) {
-      try {
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-      } catch (e) {
-        console.warn('Telegram WebApp initialization error:', e);
-      }
-    }
-    
-    // Hide loading screen when React app loads
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const loading = document.getElementById('loading');
-        const root = document.getElementById('root');
-        if (loading && root) {
-          loading.style.opacity = '0';
-          loading.style.transition = 'opacity 0.3s ease';
-          root.classList.add('loaded');
-          setTimeout(() => loading.remove(), 300);
-        }
-      }, 100);
-    });
-    
-    // Error handler
-    window.addEventListener('error', (e) => {
-      console.error('Global error:', e.error);
-      // Don't hide loading screen on error so user sees something
-    });
-  </script>
-</body>
-</html>
+
+    return this.props.children;
+  }
+}
+
+// Performance monitoring
+const startTime = performance.now();
+
+window.addEventListener('load', () => {
+  const loadTime = performance.now() - startTime;
+  console.log(`⚡ App loaded in ${loadTime.toFixed(2)}ms`);
+});
+
+// Check for WebApp environment
+const isWebApp = !!(window as any).Telegram?.WebApp;
+const isDev = import.meta.env.DEV;
+
+if (isDev) {
+  console.log('🔧 Development mode');
+}
+
+if (isWebApp) {
+  console.log('📱 Running in Telegram WebApp');
+} else {
+  console.log('🌐 Running in browser');
+}
+
+// Initialize React App
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <TonConnectUIProvider 
+        manifestUrl="/tonconnect-manifest.json"
+        uiPreferences={tonConnectTheme}
+        actionsConfiguration={{
+          twaReturnUrl: 'https://t.me/your_bot_name'
+        }}
+      >
+        <App />
+      </TonConnectUIProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);
+
+// Service Worker Registration (optional)
+if ('serviceWorker' in navigator && !isDev) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('🔄 SW registered: ', registration);
+      })
+      .catch(registrationError => {
+        console.log('❌ SW registration failed: ', registrationError);
+      });
+  });
+}
