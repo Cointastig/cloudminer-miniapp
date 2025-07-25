@@ -1,4 +1,4 @@
-import * as jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // JWT payload interface for better type safety
