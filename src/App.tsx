@@ -11,7 +11,7 @@ import {
   Wallet, 
   Database,
   ChevronRight,
-  Pickaxe,
+  Hammer,
   Timer,
   Award,
   Sparkles
@@ -372,7 +372,7 @@ export default function App() {
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               className="w-20 h-20 mx-auto"
             >
-              <Pickaxe className="w-full h-full text-cyan-400" />
+              <Hammer className="w-full h-full text-cyan-400" />
             </motion.div>
             <motion.div
               animate={{ scale: [1, 1.2, 1] }}
@@ -438,7 +438,7 @@ export default function App() {
               transition={{ duration: 2, repeat: mining ? Infinity : 0, ease: "linear" }}
               className="w-8 h-8"
             >
-              <Pickaxe className="w-full h-full text-cyan-400" />
+              <Hammer className="w-full h-full text-cyan-400" />
             </motion.div>
             <div>
               <h1 className="text-xl font-bold">DTX CloudMiner</h1>
@@ -620,7 +620,7 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <Pickaxe className="w-6 h-6" />
+                  <Hammer className="w-6 h-6" />
                   Start Mining
                 </>
               )}
