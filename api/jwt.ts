@@ -1,132 +1,138 @@
-import jwt from 'jsonwebtoken';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// JWT payload interface for better type safety
-interface JWTPayload {
-  iss: string;
-  aud: string;
-  sub: string;
-  iat: number;
-  exp: number;
-  telegram_id: string;
-  role: string;
-}
-
-export default function handler(
-  req: VercelRequest,
-  res: VercelResponse
-): void {
-  // CORS headers for Telegram WebApp
+export default function handler(req: VercelRequest, res: VercelResponse): void {
+  // CORS headers first
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
-  // Only allow GET requests
-  if (req.method !== 'GET') {
-    res.status(405).json({ 
-      error: 'Method not allowed',
-      message: 'Only GET requests are supported'
-    });
-    return;
-  }
-
-  console.log('=== JWT API Debug ===');
-  console.log('Method:', req.method);
-  console.log('Query:', req.query);
-  console.log('Has JWT Secret:', !!process.env.SUPABASE_JWT_SECRET);
+  console.log('🚀 JWT API ENHANCED DEBUG VERSION');
+  console.log('=================================');
   
-  // Validate telegram ID
-  const tid = req.query.tid as string;
-  if (!tid) {
-    console.error('❌ Missing telegram ID');
-    res.status(400).json({ 
-      error: 'missing_parameter',
-      message: 'telegram_id parameter is required' 
-    });
-    return;
-  }
-
-  // Validate telegram ID format (should be numeric)
-  if (!/^\d+$/.test(tid)) {
-    console.error('❌ Invalid telegram ID format:', tid);
-    res.status(400).json({ 
-      error: 'invalid_parameter',
-      message: 'telegram_id must be numeric' 
-    });
-    return;
-  }
-
-  // Check for JWT secret
-  if (!process.env.SUPABASE_JWT_SECRET) {
-    console.error('❌ Missing SUPABASE_JWT_SECRET environment variable');
-    res.status(500).json({ 
-      error: 'server_misconfiguration',
-      message: 'JWT secret not configured'
-    });
-    return;
-  }
-
   try {
-    // JWT Payload - must match Supabase's expected structure
+    // Step 1: Basic environment check
+    console.log('📋 Step 1: Environment Check');
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- Has SUPABASE_URL:', !!process.env.VITE_SUPABASE_URL);
+    console.log('- Has ANON_KEY:', !!process.env.VITE_SUPABASE_ANON_KEY);
+    console.log('- Has JWT_SECRET:', !!process.env.SUPABASE_JWT_SECRET);
+    console.log('- JWT_SECRET length:', process.env.SUPABASE_JWT_SECRET?.length || 0);
+
+    // Step 2: Method validation
+    console.log('📋 Step 2: Method Validation');
+    console.log('- Method:', req.method);
+    if (req.method !== 'GET') {
+      console.error('❌ Wrong method');
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Step 3: Parameter validation
+    console.log('📋 Step 3: Parameter Validation');
+    const tid = req.query.tid as string;
+    console.log('- Telegram ID:', tid);
+    console.log('- TID Type:', typeof tid);
+    console.log('- TID Valid:', tid && /^\d+$/.test(tid));
+    
+    if (!tid || !/^\d+$/.test(tid)) {
+      console.error('❌ Invalid telegram ID');
+      return res.status(400).json({ error: 'Invalid telegram_id', received: tid });
+    }
+
+    // Step 4: JWT Secret validation
+    console.log('📋 Step 4: JWT Secret Validation');
+    if (!process.env.SUPABASE_JWT_SECRET) {
+      console.error('❌ Missing JWT Secret');
+      return res.status(500).json({ error: 'JWT secret not configured' });
+    }
+    console.log('✅ JWT Secret available');
+
+    // Step 5: Try to import jsonwebtoken
+    console.log('📋 Step 5: Import jsonwebtoken');
+    let jwt: any;
+    try {
+      jwt = require('jsonwebtoken');
+      console.log('✅ jsonwebtoken imported successfully');
+      console.log('- jwt.sign available:', typeof jwt.sign);
+      console.log('- jwt.verify available:', typeof jwt.verify);
+    } catch (importError: any) {
+      console.error('❌ Failed to import jsonwebtoken:', importError.message);
+      return res.status(500).json({ 
+        error: 'Import failed', 
+        details: importError.message,
+        stack: importError.stack 
+      });
+    }
+
+    // Step 6: Create JWT payload
+    console.log('📋 Step 6: Create JWT Payload');
     const now = Math.floor(Date.now() / 1000);
-    const payload: JWTPayload = {
-      // Standard JWT claims
-      iss: 'supabase',                    // issuer
-      aud: 'authenticated',               // audience
-      sub: tid,                          // subject (user id)
-      iat: now,                          // issued at
-      exp: now + (60 * 60 * 24 * 365),  // expires in 1 year
-      
-      // Custom claims for Supabase RLS
+    const payload = {
+      iss: 'supabase',
+      aud: 'authenticated',
+      sub: tid,
+      iat: now,
+      exp: now + (60 * 60 * 24 * 365),
       telegram_id: tid,
       role: 'authenticated'
     };
+    console.log('✅ Payload created:', { ...payload, exp: 'hidden_for_security' });
 
-    console.log('Creating JWT for telegram_id:', tid);
-
-    const token = jwt.sign(
-      payload,
-      process.env.SUPABASE_JWT_SECRET,
-      { 
-        algorithm: 'HS256',  // Explicitly use HS256
-        header: {
-          alg: 'HS256',
-          typ: 'JWT'
-        }
-      }
-    );
-
-    // Validate token (security check)
+    // Step 7: Sign JWT
+    console.log('📋 Step 7: Sign JWT Token');
+    let token: string;
     try {
-      const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET) as JWTPayload;
-      console.log('✅ Token validated successfully');
-      console.log('Token expires at:', new Date(decoded.exp * 1000).toISOString());
-    } catch (verifyError) {
-      throw new Error(`Token validation failed: ${verifyError}`);
+      token = jwt.sign(payload, process.env.SUPABASE_JWT_SECRET, { 
+        algorithm: 'HS256' 
+      });
+      console.log('✅ JWT signed successfully');
+      console.log('- Token length:', token.length);
+      console.log('- Token starts with:', token.substring(0, 20) + '...');
+    } catch (signError: any) {
+      console.error('❌ JWT signing failed:', signError.message);
+      return res.status(500).json({ 
+        error: 'JWT signing failed', 
+        details: signError.message 
+      });
     }
 
-    // Set security headers
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    // Step 8: Verify JWT (optional validation)
+    console.log('📋 Step 8: Verify JWT Token');
+    try {
+      const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET);
+      console.log('✅ JWT verification successful');
+      console.log('- Decoded sub:', (decoded as any).sub);
+      console.log('- Decoded telegram_id:', (decoded as any).telegram_id);
+    } catch (verifyError: any) {
+      console.error('❌ JWT verification failed:', verifyError.message);
+      return res.status(500).json({ 
+        error: 'JWT verification failed', 
+        details: verifyError.message 
+      });
+    }
 
-    // Return token as plain text (as expected by frontend)
+    // Step 9: Success response
+    console.log('📋 Step 9: Send Response');
+    console.log('✅ ALL STEPS SUCCESSFUL - Sending token');
+    
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.status(200).send(token);
 
-  } catch (error: any) {
-    console.error('❌ JWT creation/validation failed:', error.message);
-    console.error('Error stack:', error.stack);
+  } catch (globalError: any) {
+    console.error('🚨 GLOBAL ERROR CAUGHT:');
+    console.error('- Message:', globalError.message);
+    console.error('- Name:', globalError.name);
+    console.error('- Stack:', globalError.stack);
     
-    res.status(500).json({ 
-      error: 'jwt_processing_failed',
-      message: 'Failed to create or validate JWT token',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    res.status(500).json({
+      error: 'Global error',
+      message: globalError.message,
+      name: globalError.name,
+      timestamp: new Date().toISOString()
     });
   }
 }
