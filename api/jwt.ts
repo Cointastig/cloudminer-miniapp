@@ -28,7 +28,8 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     console.log('- Method:', req.method);
     if (req.method !== 'GET') {
       console.error('❌ Wrong method');
-      return res.status(405).json({ error: 'Method not allowed' });
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
     }
 
     // Step 3: Parameter validation
@@ -40,14 +41,16 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     
     if (!tid || !/^\d+$/.test(tid)) {
       console.error('❌ Invalid telegram ID');
-      return res.status(400).json({ error: 'Invalid telegram_id', received: tid });
+      res.status(400).json({ error: 'Invalid telegram_id', received: tid });
+      return;
     }
 
     // Step 4: JWT Secret validation
     console.log('📋 Step 4: JWT Secret Validation');
     if (!process.env.SUPABASE_JWT_SECRET) {
       console.error('❌ Missing JWT Secret');
-      return res.status(500).json({ error: 'JWT secret not configured' });
+      res.status(500).json({ error: 'JWT secret not configured' });
+      return;
     }
     console.log('✅ JWT Secret available');
 
@@ -61,11 +64,12 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       console.log('- jwt.verify available:', typeof jwt.verify);
     } catch (importError: any) {
       console.error('❌ Failed to import jsonwebtoken:', importError.message);
-      return res.status(500).json({ 
+      res.status(500).json({ 
         error: 'Import failed', 
         details: importError.message,
         stack: importError.stack 
       });
+      return;
     }
 
     // Step 6: Create JWT payload
@@ -94,10 +98,11 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       console.log('- Token starts with:', token.substring(0, 20) + '...');
     } catch (signError: any) {
       console.error('❌ JWT signing failed:', signError.message);
-      return res.status(500).json({ 
+      res.status(500).json({ 
         error: 'JWT signing failed', 
         details: signError.message 
       });
+      return;
     }
 
     // Step 8: Verify JWT (optional validation)
@@ -109,10 +114,11 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       console.log('- Decoded telegram_id:', (decoded as any).telegram_id);
     } catch (verifyError: any) {
       console.error('❌ JWT verification failed:', verifyError.message);
-      return res.status(500).json({ 
+      res.status(500).json({ 
         error: 'JWT verification failed', 
         details: verifyError.message 
       });
+      return;
     }
 
     // Step 9: Success response
