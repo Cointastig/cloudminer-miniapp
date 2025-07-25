@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import jwt from 'jsonwebtoken';
 
 export default function handler(req: VercelRequest, res: VercelResponse): void {
   // CORS headers first
@@ -11,7 +12,7 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     return;
   }
 
-  console.log('🚀 JWT API ENHANCED DEBUG VERSION');
+  console.log('🚀 JWT API Handler Started');
   console.log('=================================');
   
   try {
@@ -54,26 +55,8 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     }
     console.log('✅ JWT Secret available');
 
-    // Step 5: Try to import jsonwebtoken
-    console.log('📋 Step 5: Import jsonwebtoken');
-    let jwt: any;
-    try {
-      jwt = require('jsonwebtoken');
-      console.log('✅ jsonwebtoken imported successfully');
-      console.log('- jwt.sign available:', typeof jwt.sign);
-      console.log('- jwt.verify available:', typeof jwt.verify);
-    } catch (importError: any) {
-      console.error('❌ Failed to import jsonwebtoken:', importError.message);
-      res.status(500).json({ 
-        error: 'Import failed', 
-        details: importError.message,
-        stack: importError.stack 
-      });
-      return;
-    }
-
-    // Step 6: Create JWT payload
-    console.log('📋 Step 6: Create JWT Payload');
+    // Step 5: Create JWT payload
+    console.log('📋 Step 5: Create JWT Payload');
     const now = Math.floor(Date.now() / 1000);
     const payload = {
       iss: 'supabase',
@@ -84,10 +67,10 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       telegram_id: tid,
       role: 'authenticated'
     };
-    console.log('✅ Payload created:', { ...payload, exp: 'hidden_for_security' });
+    console.log('✅ Payload created');
 
-    // Step 7: Sign JWT
-    console.log('📋 Step 7: Sign JWT Token');
+    // Step 6: Sign JWT
+    console.log('📋 Step 6: Sign JWT Token');
     let token: string;
     try {
       token = jwt.sign(payload, process.env.SUPABASE_JWT_SECRET, { 
@@ -105,8 +88,8 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       return;
     }
 
-    // Step 8: Verify JWT (optional validation)
-    console.log('📋 Step 8: Verify JWT Token');
+    // Step 7: Verify JWT (optional validation)
+    console.log('📋 Step 7: Verify JWT Token');
     try {
       const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET);
       console.log('✅ JWT verification successful');
@@ -121,8 +104,8 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
       return;
     }
 
-    // Step 9: Success response
-    console.log('📋 Step 9: Send Response');
+    // Step 8: Success response
+    console.log('📋 Step 8: Send Response');
     console.log('✅ ALL STEPS SUCCESSFUL - Sending token');
     
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
