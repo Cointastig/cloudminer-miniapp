@@ -22,6 +22,7 @@ import { Card, CardContent } from './components/ui/card';
 import { Progress } from './components/ui/progress';
 import { MiningVisualizer } from './components/ui/mining-visualizer';
 import { StatsCard } from './components/ui/stats-card';
+import './styles.css';
 
 /* ---------- Type Definitions ---------- */
 interface TelegramWebApp {
