@@ -89,6 +89,15 @@ if (isWebApp) {
   console.log('🌐 Running in browser');
 }
 
+// Get manifest URL based on environment
+const getManifestUrl = () => {
+  if (import.meta.env.DEV) {
+    return '/tonconnect-manifest.json';
+  }
+  // In production, use the full URL
+  return `${window.location.origin}/tonconnect-manifest.json`;
+};
+
 // Initialize React App
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -98,7 +107,7 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <TonConnectUIProvider 
-        manifestUrl="/tonconnect-manifest.json"
+        manifestUrl={getManifestUrl()}
         uiPreferences={tonConnectTheme}
         actionsConfiguration={{
           twaReturnUrl: 'https://t.me/your_bot_name'
