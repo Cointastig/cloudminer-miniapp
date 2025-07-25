@@ -1,6 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react-swc';
-import path from 'path';
+import { resolve } from 'path';
 
 export default defineConfig(({ command, mode }) => {
   // Load env file based on `mode` in the current working directory.
@@ -17,14 +17,14 @@ export default defineConfig(({ command, mode }) => {
     // Path resolution
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@/components': path.resolve(__dirname, './src/components'),
-        '@/utils': path.resolve(__dirname, './src/utils'),
-        '@/hooks': path.resolve(__dirname, './src/hooks'),
-        '@/types': path.resolve(__dirname, './src/types'),
-        '@/api': path.resolve(__dirname, './src/api'),
-        '@/styles': path.resolve(__dirname, './src/styles'),
-        '@/assets': path.resolve(__dirname, './src/assets'),
+        '@': resolve(__dirname, './src'),
+        '@/components': resolve(__dirname, './src/components'),
+        '@/utils': resolve(__dirname, './src/utils'),
+        '@/hooks': resolve(__dirname, './src/hooks'),
+        '@/types': resolve(__dirname, './src/types'),
+        '@/api': resolve(__dirname, './src/api'),
+        '@/styles': resolve(__dirname, './src/styles'),
+        '@/assets': resolve(__dirname, './src/assets'),
       },
     },
     
