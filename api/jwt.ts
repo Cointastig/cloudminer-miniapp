@@ -1,6 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac } from 'crypto';
 
+// Tell Vercel to run this function in a Node.js runtime rather than the edge.
+// Without this setting Vercel may attempt to deploy the function as an edge
+// function, which does not have access to Node built‑in modules such as
+// `crypto`. By explicitly specifying a Node runtime we ensure that the
+// built‑in crypto APIs are available and avoid runtime crashes.
+export const config = {
+  runtime: 'nodejs18.x',
+};
+
 /*
  * In the original implementation this API used the `jsonwebtoken` library to
  * create and verify JSON Web Tokens (JWTs). Unfortunately that external
