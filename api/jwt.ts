@@ -7,7 +7,8 @@ import { createHmac } from 'crypto';
 // `crypto`. By explicitly specifying a Node runtime we ensure that the
 // built‑in crypto APIs are available and avoid runtime crashes.
 export const config = {
-  runtime: 'nodejs18.x',
+  // Run this function on Vercel's Node.js runtime instead of the default Edge runtime.
+  runtime: 'nodejs',
 };
 
 /*
