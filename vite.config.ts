@@ -37,9 +37,21 @@ export default defineConfig(({ command, mode }) => {
       cors: true,
       // Only use proxy in development
       ...(mode === 'development' && {
+        // In development we proxy API requests to a local server. If
+        // VITE_BACKEND_URL is a relative path (e.g. "/api"), using it as the
+        // proxy target results in an endless self‑proxy loop. To avoid this,
+        // only use the environment variable when it is an absolute URL; otherwise
+        // default to the local backend at http://localhost:3001.
         proxy: {
           '/api': {
-            target: env.VITE_BACKEND_URL || 'http://localhost:3001',
+            target: (() => {
+              const backendUrl = env.VITE_BACKEND_URL;
+              // Use backendUrl only if it exists and does not start with '/'
+              if (backendUrl && !backendUrl.startsWith('/')) {
+                return backendUrl;
+              }
+              return 'http://localhost:3001';
+            })(),
             changeOrigin: true,
             secure: false,
           },
