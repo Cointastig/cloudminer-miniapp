@@ -89,12 +89,13 @@ if (isWebApp) {
   console.log('🌐 Running in browser');
 }
 
-// Get manifest URL based on environment
+// Get manifest URL based on current origin. The TonConnect manifest must
+// originate from the same domain as the application to avoid wallet
+// connection failures. Previously we returned a relative path during
+// development which could lead to incorrect domain resolution. Always build
+// the URL from window.location.origin so it works both in development and
+// production.
 const getManifestUrl = () => {
-  if (import.meta.env.DEV) {
-    return '/tonconnect-manifest.json';
-  }
-  // In production, use the full URL
   return `${window.location.origin}/tonconnect-manifest.json`;
 };
 
@@ -106,12 +107,20 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <TonConnectUIProvider 
+      <TonConnectUIProvider
         manifestUrl={getManifestUrl()}
         uiPreferences={tonConnectTheme}
-        actionsConfiguration={{
-          twaReturnUrl: 'https://t.me/your_bot_name'
-        }}
+        // Dynamically configure the return URL for the Telegram mini app. If
+        // VITE_TELEGRAM_BOT is provided (e.g. "my_bot"), we build the return
+        // URL as https://t.me/{bot}. Otherwise we omit the configuration so
+        // TonConnect can use its default behaviour. This prevents the wallet
+        // connection from silently failing when an invalid or placeholder
+        // username is supplied.
+        actionsConfiguration={
+          import.meta.env.VITE_TELEGRAM_BOT
+            ? { twaReturnUrl: `https://t.me/${import.meta.env.VITE_TELEGRAM_BOT}` }
+            : undefined
+        }
       >
         <App />
       </TonConnectUIProvider>
