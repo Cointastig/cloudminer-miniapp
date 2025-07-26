@@ -1,5 +1,77 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import jwt from 'jsonwebtoken';
+import { createHmac } from 'crypto';
+
+/*
+ * In the original implementation this API used the `jsonwebtoken` library to
+ * create and verify JSON Web Tokens (JWTs). Unfortunately that external
+ * dependency may not be available in all environments (for example, when
+ * installing node modules behind a restrictive network). To avoid runtime
+ * failures we implement a minimal HS256 JWT generator and verifier using
+ * Node.js' built‑in `crypto` module. The implementation below follows the
+ * standard JWT specification: a base64url encoded header, a base64url encoded
+ * payload and a signature created using HMAC‑SHA256. Only the signing and
+ * simple verification steps are needed for this API. If the provided secret
+ * changes or if the token has been tampered with, the verification will
+ * correctly fail. This removes the dependency on the external `jsonwebtoken`
+ * package without altering the API surface.
+ */
+
+/**
+ * Encode a Buffer into a base64url string by stripping padding and replacing
+ * characters according to RFC 7519.
+ */
+const base64url = (input: Buffer): string => {
+  return input
+    .toString('base64')
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+};
+
+/**
+ * Create a signed JWT using the HS256 algorithm.
+ *
+ * @param payload The payload to embed in the token
+ * @param secret  The secret used for HMAC signing
+ */
+function signJWT(payload: Record<string, unknown>, secret: string): string {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encodedHeader = base64url(Buffer.from(JSON.stringify(header)));
+  const encodedPayload = base64url(Buffer.from(JSON.stringify(payload)));
+  const data = `${encodedHeader}.${encodedPayload}`;
+  const signature = createHmac('sha256', secret).update(data).digest();
+  const encodedSignature = base64url(signature);
+  return `${data}.${encodedSignature}`;
+}
+
+/**
+ * Verify a JWT signed with HS256. Throws an error if the signature does not
+ * match. Returns the decoded payload otherwise. This function performs a
+ * minimal verification and does not check expiry (`exp`) or other claims;
+ * callers should perform such checks if necessary.
+ *
+ * @param token  The JWT to verify
+ * @param secret The secret used to sign the token
+ */
+function verifyJWT(token: string, secret: string): Record<string, unknown> {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw new Error('Invalid token format');
+  }
+  const [encodedHeader, encodedPayload, signature] = parts;
+  const data = `${encodedHeader}.${encodedPayload}`;
+  const expectedSignature = base64url(
+    createHmac('sha256', secret).update(data).digest()
+  );
+  if (expectedSignature !== signature) {
+    throw new Error('Invalid token signature');
+  }
+  const payloadJson = Buffer.from(
+    encodedPayload.replace(/-/g, '+').replace(/_/g, '/'),
+    'base64'
+  ).toString('utf8');
+  return JSON.parse(payloadJson);
+}
 
 export default function handler(req: VercelRequest, res: VercelResponse): void {
   // CORS headers first
@@ -73,9 +145,7 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     console.log('📋 Step 6: Sign JWT Token');
     let token: string;
     try {
-      token = jwt.sign(payload, process.env.SUPABASE_JWT_SECRET, { 
-        algorithm: 'HS256' 
-      });
+      token = signJWT(payload as Record<string, unknown>, process.env.SUPABASE_JWT_SECRET as string);
       console.log('✅ JWT signed successfully');
       console.log('- Token length:', token.length);
       console.log('- Token starts with:', token.substring(0, 20) + '...');
@@ -91,7 +161,7 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     // Step 7: Verify JWT (optional validation)
     console.log('📋 Step 7: Verify JWT Token');
     try {
-      const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET);
+      const decoded = verifyJWT(token, process.env.SUPABASE_JWT_SECRET as string);
       console.log('✅ JWT verification successful');
       console.log('- Decoded sub:', (decoded as any).sub);
       console.log('- Decoded telegram_id:', (decoded as any).telegram_id);
@@ -107,7 +177,7 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     // Step 8: Success response
     console.log('📋 Step 8: Send Response');
     console.log('✅ ALL STEPS SUCCESSFUL - Sending token');
-    
+
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.status(200).send(token);
 
