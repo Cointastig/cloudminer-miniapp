@@ -8,8 +8,9 @@
   --bg-secondary: #1a1a3e;
   --accent-cyan: #06b6d4;
   --accent-purple: #8b5cf6;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Increase the opacity of glass backgrounds and borders for a crisper look */
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.2);
 }
 
 /* Base Styles */
