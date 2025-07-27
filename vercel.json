@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/jwt.ts": {
+    "api/jwt.js": {
       "maxDuration": 10
     },
     "api/upgrade-usdt.ts": {
