@@ -3,7 +3,7 @@
     "api/jwt.js": {
       "maxDuration": 10
     },
-    "api/upgrade-usdt.ts": {
+    "api/upgrade-usdt.js": {
       "maxDuration": 30
     }
   },
