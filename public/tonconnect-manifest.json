@@ -1,9 +1,9 @@
 {
-  "url": "https://dtx-cloudminer.vercel.app",
+  "url": "https://cloudminer-miniapp.vercel.app",
   "name": "DTX CloudMiner",
-  "iconUrl": "https://dtx-cloudminer.vercel.app/icon-192x192.png",
-  "termsOfUseUrl": "https://dtx-cloudminer.vercel.app",
-  "privacyPolicyUrl": "https://dtx-cloudminer.vercel.app",
+  "iconUrl": "https://cloudminer-miniapp.vercel.app/icon-192x192.png",
+  "termsOfUseUrl": "https://cloudminer-miniapp.vercel.app",
+  "privacyPolicyUrl": "https://cloudminer-miniapp.vercel.app",
   "bridgeUrl": "https://bridge.tonapi.io/bridge",
   "universalUrl": "https://app.tonkeeper.com/ton-connect",
   "platforms": ["android", "ios", "chrome", "firefox", "safari"]
