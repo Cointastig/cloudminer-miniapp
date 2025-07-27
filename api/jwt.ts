@@ -1,5 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createHmac } from 'crypto';
+// Use CommonJS require for runtime imports. Vercel compiles TypeScript files
+// using a CommonJS module target. If we use ES module `import` for runtime
+// dependencies here, the compiled `.js` file will still contain an `import` which
+// Node.js refuses to execute without enabling ES modules. By switching to
+// `require()` we ensure the compiled code runs correctly under the default
+// CommonJS environment. The `import type` below is erased at compile time and
+// has no impact on the generated JavaScript.
+const { createHmac } = require('crypto');
 
 // Tell Vercel to run this function in a Node.js runtime rather than the edge.
 // Without this setting Vercel may attempt to deploy the function as an edge
