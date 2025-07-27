@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+// Modified UI design applied
 import WebApp from '@twa-dev/sdk';
 import { useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { createClient } from '@supabase/supabase-js';
@@ -7,21 +8,21 @@ import {
   Zap, 
   TrendingUp, 
   Coins, 
-  Settings, 
   Wallet, 
   Database,
   ChevronRight,
   Hammer,
   Timer,
   Award,
-  Sparkles
+  Sparkles,
+  Activity,
+  HardDrive
 } from 'lucide-react';
 
 import { Button } from './components/ui/button';
 import { Card, CardContent } from './components/ui/card';
 import { Progress } from './components/ui/progress';
 import { MiningVisualizer } from './components/ui/mining-visualizer';
-import { StatsCard } from './components/ui/stats-card';
 import './styles.css';
 
 /* ---------- Type Definitions ---------- */
@@ -432,68 +433,63 @@ export default function App() {
   /* ---------- Haupt-UI ---------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      {/* Header */}
-      <motion.div 
-        initial={{ y: -50, opacity: 0 }}
+      {/* Hero Section */}
+      <motion.div
+        initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative p-6 pb-2"
+        className="px-6 pt-8 text-center space-y-2"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ rotate: mining ? 360 : 0 }}
-              transition={{ duration: 2, repeat: mining ? Infinity : 0, ease: "linear" }}
-              className="w-8 h-8"
-            >
-              <Hammer className="w-full h-full text-cyan-400" />
-            </motion.div>
-            <div>
-              <h1 className="text-xl font-bold">DTX CloudMiner</h1>
-              <div className="text-xs text-gray-400">
-                {currentLevelConfig.name}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowStats(!showStats)}
-              className="p-2"
-            >
-              <Settings className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
+        <h1 className="text-3xl font-extrabold holographic">DTX CloudMiner</h1>
+        <p className="text-sm text-gray-400">Your personal mining dashboard</p>
+        <div className="text-xs text-gray-500">{currentLevelConfig.name}</div>
       </motion.div>
 
-      {/* Stats Panel */}
-      <AnimatePresence>
-        {showStats && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="px-6 overflow-hidden"
-          >
-            <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-cyan-500/20 mb-4">
-              <div className="grid grid-cols-2 gap-4">
-                <StatsCard
-                  icon={<Timer />}
-                  label="Mining Time"
-                  value={formatTime(miningTime)}
-                />
-                <StatsCard
-                  icon={<TrendingUp />}
-                  label="Hash Rate"
-                  value={`${(level * currentLevelConfig.multiplier * 0.72).toFixed(2)} MH/s`}
-                />
+      {/* Stats Row */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="px-6 mt-6"
+      >
+        <div className="grid grid-cols-3 gap-4">
+          {/* Hash Rate Card */}
+          <Card className="bg-black/30 backdrop-blur-sm border-cyan-500/20">
+            <CardContent className="p-4 text-center space-y-1">
+              <div className="flex items-center justify-center gap-1 text-xs text-gray-400">
+                <Activity className="w-4 h-4 text-cyan-400" />
+                Hash Rate
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <div className="text-lg font-mono font-bold">
+                {(level * currentLevelConfig.multiplier * 0.72).toFixed(1)} MH/s
+              </div>
+            </CardContent>
+          </Card>
+          {/* Power Card */}
+          <Card className="bg-black/30 backdrop-blur-sm border-yellow-500/20">
+            <CardContent className="p-4 text-center space-y-1">
+              <div className="flex items-center justify-center gap-1 text-xs text-gray-400">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                Power
+              </div>
+              <div className="text-lg font-mono font-bold">
+                {mining ? `${(level * 45).toFixed(0)}W` : '0W'}
+              </div>
+            </CardContent>
+          </Card>
+          {/* Temperature Card */}
+          <Card className="bg-black/30 backdrop-blur-sm border-red-500/20">
+            <CardContent className="p-4 text-center space-y-1">
+              <div className="flex items-center justify-center gap-1 text-xs text-gray-400">
+                <HardDrive className="w-4 h-4 text-red-400" />
+                Temp
+              </div>
+              <div className="text-lg font-mono font-bold">
+                {mining ? `${(65 + level * 2).toFixed(0)}°C` : '25°C'}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </motion.div>
 
       {/* Error Display */}
       <AnimatePresence>
