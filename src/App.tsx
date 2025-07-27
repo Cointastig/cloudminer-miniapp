@@ -352,25 +352,24 @@ export default function App() {
         animate={{ y: 0, opacity: 1 }}
         className="px-6 pt-8 text-center space-y-4"
       >
-        {/* Larger headline and subtitle for a more premium look */}
-        <h1 className="text-4xl font-extrabold holographic tracking-tight">DTX CloudMiner</h1>
-        <p className="text-base text-gray-400">Your personal mining dashboard</p>
-        <div className="text-sm text-gray-500 font-medium">{currentLevelConfig.name}</div>
-        {/* Neon icon trio with larger icons */}
-        <div className="flex justify-center items-center gap-10 mt-6">
-          <div className="text-6xl bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent flex items-center justify-center">
-            <Fan className="w-10 h-10" />
+        <h1 className="text-3xl font-extrabold holographic">DTX CloudMiner</h1>
+        <p className="text-sm text-gray-400">Your personal mining dashboard</p>
+        <div className="text-xs text-gray-500">{currentLevelConfig.name}</div>
+        {/* Neon icon trio */}
+        <div className="flex justify-center items-center gap-8 mt-4">
+          <div className="text-5xl bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent flex items-center justify-center">
+            <Fan className="w-8 h-8" />
           </div>
-          <div className="text-6xl bg-gradient-to-r from-pink-400 to-yellow-500 bg-clip-text text-transparent flex items-center justify-center">
-            <Server className="w-10 h-10" />
+          <div className="text-5xl bg-gradient-to-r from-pink-400 to-yellow-500 bg-clip-text text-transparent flex items-center justify-center">
+            <Server className="w-8 h-8" />
           </div>
-          <div className="text-6xl bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent flex items-center justify-center">
-            <Hammer className="w-10 h-10" />
+          <div className="text-5xl bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent flex items-center justify-center">
+            <Hammer className="w-8 h-8" />
           </div>
         </div>
-        {/* Mining progress bar: thicker for better visibility */}
-        <div className="mt-8">
-          <Progress value={(earned % 1) * 100} variant="mining" className="h-3 rounded-full" />
+        {/* Mining progress bar */}
+        <div className="mt-6">
+          <Progress value={(earned % 1) * 100} variant="mining" className="h-2 rounded-full" />
         </div>
       </motion.div>
       {/* Stats Row */}
