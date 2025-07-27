@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 // Use CommonJS require for runtime imports. Vercel compiles TypeScript files
-// using a CommonJS module target. If we use ES module `import` for runtime
+// to CommonJS for Node.js functions. If we use ES module `import` for runtime
 // dependencies here, the compiled `.js` file will still contain an `import` which
 // Node.js refuses to execute without enabling ES modules. By switching to
 // `require()` we ensure the compiled code runs correctly under the default
@@ -13,7 +13,11 @@ const { createHmac } = require('crypto');
 // function, which does not have access to Node built‑in modules such as
 // `crypto`. By explicitly specifying a Node runtime we ensure that the
 // built‑in crypto APIs are available and avoid runtime crashes.
-export const config = {
+// Export a configuration object for Vercel. We define it as a regular const and
+// attach it to `module.exports` at the end of the file. Exporting via
+// `module.exports` ensures that the generated JavaScript uses CommonJS syntax
+// throughout and avoids `export` statements which Node.js cannot parse.
+const config = {
   // Run this function on Vercel's Node.js runtime instead of the default Edge runtime.
   runtime: 'nodejs',
 };
@@ -90,7 +94,7 @@ function verifyJWT(token: string, secret: string): Record<string, unknown> {
   return JSON.parse(payloadJson);
 }
 
-export default function handler(req: VercelRequest, res: VercelResponse): void {
+function handler(req: VercelRequest, res: VercelResponse): void {
   // CORS headers first
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -212,3 +216,12 @@ export default function handler(req: VercelRequest, res: VercelResponse): void {
     });
   }
 }
+
+// At the end of the file we explicitly attach our handler and config to
+// `module.exports` using CommonJS. Vercel will look for a `default` export on
+// `module.exports` to determine the request handler. Additionally we provide
+// the `config` property for runtime configuration.
+module.exports = {
+  default: handler,
+  config,
+};
